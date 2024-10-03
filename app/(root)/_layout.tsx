@@ -57,6 +57,8 @@ const Layout = () => {
           name="ticket_history_details/[ticketId]"
           options={{ title: "Ticket Details", drawerItemStyle: { height: 0 } }}
         />
+      
+
       </Drawer>
     </GestureHandlerRootView>
   );

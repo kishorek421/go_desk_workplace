@@ -8,7 +8,7 @@ import Icon from "react-native-vector-icons/AntDesign";
 import RecentTicketHistoryLayout from "@/components/home/RecentTicketHistoryLayout";
 import { router } from "expo-router";
 import { CustomerDetailsModel } from "@/models/customers";
-
+import { Link } from "expo-router";
 const ContentLayout = ({
   customerDetails,
 }: {
@@ -32,6 +32,10 @@ const ContentLayout = ({
               <Text className="text-2xl font-medium">
                 Having trouble with your
                 <Text className="text-primary-950"> Device?</Text>
+              
+                <Text><Link href={'/(devices)/create_devices'}>devices</Link> </Text>
+                <Text><Link href={'/(employees)/employee_list'}>employe</Link> </Text>
+               
               </Text>
             </VStack>
             <Button

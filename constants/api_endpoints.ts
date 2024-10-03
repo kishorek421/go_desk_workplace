@@ -43,3 +43,13 @@ export const GET_TICKET_DETAILS = "/tickets/getTicketById";
 export const GET_ASSETS_IN_USE =
   "/assets/assetsInUse/getCustomerAssetsInUseListBySerialNoSearch";
 export const GET_ISSUE_TYPES = "/assets/assetIssueType/getIssueTypesList";
+
+ //create asset
+ export const CREATE_ASSET = "/assets/assetMaster/getAssetMastersList";
+ export const GET_ASSET_TYPES ="/assets/assetType/getAssetTypesList";
+ export const GET_ASSET_MODELS ="/assets/assetModel/getAssetModelsList";
+ export const GET_LICENSED_TYPES ="/configurations/getConfigurationsForDropdown";
+ export const GET_IMPACTS ="/configurations/getConfigurationsForDropdown";
+
+ //employee list
+ export const GET_EMPLOYEE_DETAILS ='/employees/activeEmployee/list?';
