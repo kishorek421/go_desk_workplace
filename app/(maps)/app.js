@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Alert, AppState, Text, Image ,Linking} from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, Alert, AppState, Text, Image, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import MapView, { Marker } from 'react-native-maps';
@@ -9,15 +9,27 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Task name for background location updates
 const LOCATION_TASK_NAME = 'background-location-task';
-const GOOGLE_MAPS_APIKEY = 'AIzaSyC-Z4y49zOJDGjSAL_KityroYHOFLU7DH4'; 
+const GOOGLE_MAPS_APIKEY = 'AIzaSyArnnwpKWaI9Rp_OSC9mn-L1gG0gtj8J5A'; // Add your Google Maps API Key
+
+// Define interfaces for location and coordinates
+interface LocationState {
+  latitude: number;
+  longitude: number;
+}
+
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
 const RouteMap = () => {
-  const [currentLocation, setCurrentLocation] = useState(null);
+  const [location, setLocation] = useState<LocationState | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LocationState | null>(null);
   const [destination, setDestination] = useState('');
-  const [destinationCoords, setDestinationCoords] = useState(null);
-  const [duration, setDuration] = useState(null); // Store duration
-  const [distance, setDistance] = useState(null); // Store distance
-  const mapRef = useRef(null);
+  const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
+  const mapRef = useRef<MapView>(null);
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
@@ -91,7 +103,6 @@ const RouteMap = () => {
         longitude: location.lng,
       });
 
-      // Fit the map to both current location and destination
       if (mapRef.current && currentLocation) {
         mapRef.current.fitToCoordinates(
           [
@@ -104,19 +115,25 @@ const RouteMap = () => {
           }
         );
       }
-
-      // Open Google Maps with directions
-      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${location.lat},${location.lng}&travelmode=driving`;
-      Linking.openURL(googleMapsUrl);
     } catch (error) {
       Alert.alert('Error finding the location. Please enter a valid destination.');
       console.error('Geocoding error:', error);
     }
   };
 
-  const onDirectionsReady = (result) => {
-    setDuration(result.duration); // Set the duration from the result
-    setDistance(result.distance); // Set the distance from the result
+  const openGoogleMapsDirections = () => {
+    if (!currentLocation || !destinationCoords) {
+      Alert.alert('Please enter a valid destination and ensure current location is available');
+      return;
+    }
+
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${destinationCoords.latitude},${destinationCoords.longitude}&travelmode=driving`;
+    Linking.openURL(googleMapsUrl);
+  };
+
+  const onDirectionsReady = (result : any) => {
+    setDuration(result.duration); 
+    setDistance(result.distance); 
   };
 
   return (
@@ -135,56 +152,47 @@ const RouteMap = () => {
           onChangeText={setDestination}
         />
 
-        {/* Display Distance and Duration */}
         {duration && distance && (
-  <Text style={styles.routeInfo}>
-    Distance: {distance.toFixed(2)} km, Duration: {Math.floor(duration / 60) > 0 
-      ? `${Math.floor(duration / 60)} hr ${Math.round(duration % 60)} min` 
-      : `${Math.round(duration)} min`}
-  </Text>
-)}
+          <Text style={styles.routeInfo}>
+            Distance: {distance.toFixed(2)} km, Duration: {Math.floor(duration / 60) > 0 
+              ? `${Math.floor(duration / 60)} hr ${Math.round(duration % 60)} min` 
+              : `${Math.round(duration)} min`}
+          </Text>
+        )}
 
-        {/* Show Directions Button */}
         <TouchableOpacity style={styles.directionButton} onPress={handleDestinationSearch}>
-         
           <Text style={styles.buttonText}>Show Directions</Text>
         </TouchableOpacity>
       </View>
 
       <MapView
-  ref={mapRef}
-  initialRegion={{
-    latitude: currentLocation ? currentLocation.latitude : 20.5937,
-    longitude: currentLocation ? currentLocation.longitude : 78.9629,
-    latitudeDelta: 0.01,  // Reduced delta for closer zoom
-    longitudeDelta: 0.01, // Reduced delta for closer zoom
-  }}
-  style={StyleSheet.absoluteFill}
->
-
-        {/* Marker for Current Location */}
+        ref={mapRef}
+        initialRegion={{
+          latitude: currentLocation ? currentLocation.latitude : 20.5937,
+          longitude: currentLocation ? currentLocation.longitude : 78.9629,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        style={StyleSheet.absoluteFill}
+      >
         {currentLocation && (
           <Marker
             coordinate={currentLocation}
             title="Your Current Location"
-            tracksViewChanges={false}
           >
             <Image source={require('../../assets/current_location.png')} style={{ width: 40, height: 40 }} />
           </Marker>
         )}
 
-        {/* Marker for Destination */}
         {destinationCoords && (
           <Marker
             coordinate={destinationCoords}
             title={destination}
-            tracksViewChanges={false}
           >
             <Image source={require('../../assets/destination.png')} style={{ width: 40, height: 40 }} />
           </Marker>
         )}
 
-        {/* Route between current location and destination */}
         {currentLocation && destinationCoords && (
           <MapViewDirections
             origin={currentLocation}
@@ -193,11 +201,12 @@ const RouteMap = () => {
             apikey={GOOGLE_MAPS_APIKEY}
             strokeColor="blue"
             strokeWidth={5}
-            onReady={onDirectionsReady} // Call when the directions are ready
+            onReady={onDirectionsReady}
           />
         )}
       </MapView>
-      <TouchableOpacity style={styles.fab} onPress={handleDestinationSearch}>
+
+      <TouchableOpacity style={styles.fab} onPress={openGoogleMapsDirections}>
         <Icon name="directions" size={30} color="white" />
       </TouchableOpacity>
     </View>
@@ -212,7 +221,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   }
 
   if (data) {
-    const { locations } = data;
+    const { locations  } = data;
     const { latitude, longitude } = locations[0].coords;
     console.log('Background location updated:', { latitude, longitude });
   }
@@ -250,25 +259,24 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 16,
   },
+  fab: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    backgroundColor: '#2196F3',
+    borderRadius: 50,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   routeInfo: {
-    fontSize: 16,
-    marginBottom: 10,
+    marginVertical: 5,
     color: 'black',
+    fontSize : 20,
+    fontWeight: 'bold',
     textAlign: 'center',
-    fontWeight: 'bold', // Makes the text bold
-},
-fab: {
-  position: 'absolute',
-  bottom: 90,
-  right: 20,
-  backgroundColor: '#2196F3',
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  justifyContent: 'center',
-  alignItems: 'center',
-}
-
+  },
 });
 
 export default RouteMap;
